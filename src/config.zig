@@ -7,7 +7,7 @@ const ArrayList = std.ArrayList;
 const HashInputPaths = @import("file_hasher.zig").HashInputPaths;
 
 /// contains the state of the thread pool
-const ThreadContext = struct {
+pub const ThreadContext = struct {
         // thread specific allocator, stays alive until the thread pool is closed
         // used for allocations relating to the thread pool
         arena: ArenaAllocator,
@@ -41,7 +41,7 @@ const ThreadContext = struct {
 };
 
 /// contains the state of the main program
-const AngokuContext = struct {
+pub const AngokuContext = struct {
         // global allocator aka. Arena1, stays alive until .deinit() is called
         // used or minor alocations that will get cleaned at the end of the main function
         arena: ArenaAllocator,
