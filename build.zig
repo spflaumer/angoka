@@ -20,10 +20,14 @@ pub fn build(b: *Build) !void {
         // create modules
         // ! change this to a loop over contents within the src directory
         const utils_mod = b.addModule("utils", .{ .source_file = .{ .path = "src/utils.zig" } });
+        const config_mod = b.addModule("config", .{ .source_file = .{ .path = "src/config.zig" } });
+        const file_hasher_mod = b.addModule("file_hasher", .{ .source_file = .{ .path = "src/file_hasher.zig" } });
 
         // add the module to the exe
         // ! change this to a loop over an array/list of modules created by the previous section
         exe.addModule("utils", utils_mod);
+        exe.addModule("config", config_mod);
+        exe.addModule("file_hasher", file_hasher_mod);
 
         // add the run step
         const run_step = b.addRunArtifact(exe);
