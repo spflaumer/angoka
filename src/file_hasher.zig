@@ -32,13 +32,16 @@ inline fn __hashFile(ctx: *ThreadContext, path: []const u8) !void {
         ctx.hasher_lock.unlock();
 }
 
-fn _hashFromPath(ctx: *ThreadContext, inputs: *ArrayList(HashInputPaths)) !void {
+fn _hashFromPath(ctx: *ThreadContext) !void {
         // get a handle to the current working directory
         const cwd = std.fs.cwd();
 
         // get an input path element from the list
-        while(inputs.popOrNull()) |inpu| {
-                var input = @as(HashInputPaths, inpu);
+        while(input: {
+                ctx.inputs_lock.lock();
+                defer ctx.inputs_lock.unlock();
+                break :input ctx.inputs.popOrNull();
+        }) |input| {
                 switch (input.folder) {
                         // if the path is a folder
                         true => {
@@ -57,17 +60,11 @@ fn _hashFromPath(ctx: *ThreadContext, inputs: *ArrayList(HashInputPaths)) !void 
 }
 
 /// get the hash of all input files
-pub fn getHash(ctx: *AngokuConfig) ![sha3_512.digest_length]u8 {
+pub fn generateHash(ctx: *AngokuConfig) !void {
         // initialize the threads
         var threads = try ThreadContext.init(ctx, std.heap.page_allocator);
         defer threads.deinit();
 
-        // spawn the thread pool with the actual hashing function
-        threads.work(_hashFromPath, .{&threads, ctx.input});
-
-        // get the final hash
-        var final_files: [64]u8 = undefined;
-        threads.hasher.final(final_files);
-
-        return final_files;
+        // spawn the thread pool with the actual file hashing function
+        threads.work(_hashFromPath, .{&threads});
 }
