@@ -37,17 +37,26 @@ pub const ThreadContext = struct {
         /// the function supplied should use this struct's WaitGroup
         /// this SHOULD NOT be called twice
         pub fn work(ctx: *Self, comptime func: anytype, args: anytype) !void {
-                // spawn the requested amount of threads
-                for(0..ctx.jobs) |_| {
-                        // for some reason, using .append() causes the following error
-                        // "thread <id> panic: start index 16 is larger than end index 0"
-                        // calling .ensureCapacity(1) beforehand or using .addOne() instead seems to resolve the issue
-                        var thread = try ctx.threads.addOne();
-                        thread.* =  try Thread.spawn(.{.allocator = ctx.arena.allocator()}, func, args);
+                // ! using an ArrayList has caused some weird issues
+                // ! don't use an ArrayList for now
+                //// spawn the requested amount of threads
+                //for(0..ctx.jobs) |_| {
+                //        // for some reason, using .append() causes the following error
+                //        // "thread <id> panic: start index 16 is larger than end index 0"
+                //        // calling .ensureCapacity(1) beforehand or using .addOne() instead seems to resolve the issue
+                //        var thread = try ctx.threads.addOne();
+                //        thread.* =  try Thread.spawn(.{.allocator = ctx.arena.allocator()}, func, args);
+                //}
+                //// join the threads
+                //// since the threads are popped off of the list, we can insure that no repeated calls are made to consumed threads
+                //while(ctx.threads.popOrNull()) |thread| @as(Thread, thread).join();
+                var threads = try ctx.arena.allocator().alloc(Thread, ctx.jobs);
+                for(0..ctx.jobs) |i| {
+                        threads[i] = try Thread.spawn(.{}, func, args);
                 }
-                // join the threads
-                // since the threads are popped off of the list, we can insure that no repeated calls are made to consumed threads
-                while(ctx.threads.popOrNull()) |thread| @as(Thread, thread).join();
+                for (threads) |thread| {
+                        thread.join();
+                }
         }
 
         /// initialize the thread pool and arena allocator

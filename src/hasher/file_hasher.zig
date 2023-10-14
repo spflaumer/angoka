@@ -18,6 +18,7 @@ inline fn __hashFile(ctx: *ThreadContext, path: []const u8) !void {
         // open the file
         const cwd = std.fs.cwd();
         const file = try cwd.openFile(path, .{});
+        defer file.close();
         const stat_file = try file.stat();
 
         // create the buffer where the file's content will end up in
@@ -47,6 +48,7 @@ fn _hashFromPath(ctx: *ThreadContext) !void {
                         // if the path is a folder
                         true => {
                                 var iter_folder = try cwd.openIterableDir(input.path, .{});
+                                defer iter_folder.close();
                                 var walker_folder = try iter_folder.walk(ctx.arena.allocator());
                                 defer walker_folder.deinit();
                                 while(try walker_folder.next()) |entry| {
