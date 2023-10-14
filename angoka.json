@@ -1,0 +1,8 @@
+{
+        "jobs": 6,
+        "input": [
+                ".gitignore:false",
+                ".gitmodules:false"
+        ],
+        "output": "key.file"
+}
