@@ -37,8 +37,8 @@ pub const ThreadContext = struct {
         /// the function supplied should use this struct's WaitGroup
         /// this SHOULD NOT be called twice
         pub fn work(ctx: *Self, comptime func: anytype, args: anytype) !void {
-                // ! using an ArrayList has caused some weird issues
-                // ! don't use an ArrayList for now
+                // ! using an ArrayList has caused data race conditions
+                // ! don't use an ArrayList for now; find a way to do a synchronous ArrayList
                 //// spawn the requested amount of threads
                 //for(0..ctx.jobs) |_| {
                 //        // for some reason, using .append() causes the following error
@@ -50,10 +50,14 @@ pub const ThreadContext = struct {
                 //// join the threads
                 //// since the threads are popped off of the list, we can insure that no repeated calls are made to consumed threads
                 //while(ctx.threads.popOrNull()) |thread| @as(Thread, thread).join();
+                
+                // alloc threads
                 var threads = try ctx.arena.allocator().alloc(Thread, ctx.jobs);
                 for(0..ctx.jobs) |i| {
                         threads[i] = try Thread.spawn(.{}, func, args);
                 }
+
+                // wat for all threads to finish
                 for (threads) |thread| {
                         thread.join();
                 }
